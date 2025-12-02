@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Exam Validator - Validação de Exames</title>
+    <style>
+        :root {
+            --color-primary: #208094;
+            --color-primary-hover: #1a6875;
+            --color-success: #2fb385;
+            --color-error: #e74c3c;
+            --color-warning: #f39c12;
+            --color-info: #3498db;
+            --bg-light: #f5f7fa;
+            --bg-surface: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --border-color: #e0e0e0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--bg-surface);
+            border-bottom: 2px solid var(--border-color);
+            padding: 20px 0;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        h1 {
+            color: var(--color-primary);
+            margin-bottom: 5px;
+        }
+
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 0;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            margin-bottom: -2px;
+        }
+
+        .tab-btn.active {
+            color: var(--color-primary);
+            border-bottom-color: var(--color-primary);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .card h2 {
+            color: var(--color-primary);
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+
+        .optional-badge {
+            font-size: 12px;
+            font-weight: normal;
+            color: var(--text-secondary);
+        }
+
+        input[type="text"],
+        input[type="email"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(32, 128, 148, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .file-upload {
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background-color: var(--bg-light);
+        }
+
+        .file-upload:hover,
+        .file-upload.drag-over {
+            border-color: var(--color-primary);
+            background-color: rgba(32, 128, 148, 0.05);
+        }
+
+        .file-upload input[type="file"] {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .upload-text {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .upload-hint {
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .file-list {
+            margin-top: 15px;
+        }
+
+        .file-item {
+            background: var(--bg-light);
+            padding: 10px 15px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .file-item.success {
+            background-color: rgba(47, 179, 133, 0.1);
+            border-left: 3px solid var(--color-success);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--color-primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(32, 128, 148, 0.3);
+        }
+
+        .btn-secondary {
+            background-color: var(--bg-light);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .exam-card {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            background: var(--bg-surface);
+            position: relative;
+        }
+
+        .exam-card.complete {
+            border-left: 4px solid var(--color-success);
+        }
+
+        .exam-card.incomplete {
+            border-left: 4px solid var(--color-warning);
+        }
+
+        .exam-card.error {
+            border-left: 4px solid var(--color-error);
+        }
+
+        .exam-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .exam-title {
+            font-weight: 600;
+            color: var(--color-primary);
+            margin-bottom: 4px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-complete {
+            background-color: rgba(47, 179, 133, 0.2);
+            color: var(--color-success);
+        }
+
+        .status-incomplete {
+            background-color: rgba(243, 156, 18, 0.2);
+            color: var(--color-warning);
+        }
+
+        .status-error {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: var(--color-error);
+        }
+
+        .exam-details {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 13px;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .comparison-table th {
+            background-color: var(--bg-light);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .match-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .match-yes {
+            background-color: rgba(47, 179, 133, 0.2);
+            color: var(--color-success);
+        }
+
+        .match-no {
+            background-color: rgba(231, 76, 60, 0.2);
+            color: var(--color-error);
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: var(--bg-light);
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            border-left: 4px solid var(--border-color);
+        }
+
+        .stat-box.success {
+            border-left-color: var(--color-success);
+        }
+
+        .stat-box.warning {
+            border-left-color: var(--color-warning);
+        }
+
+        .stat-box.error {
+            border-left-color: var(--color-error);
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .alert {
+            padding: 15px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 4px solid;
+        }
+
+        .alert-info {
+            background-color: rgba(52, 152, 219, 0.1);
+            border-color: var(--color-info);
+            color: var(--color-info);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--bg-surface);
+            border-radius: 8px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            margin-bottom: 20px;
+            color: var(--color-primary);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+
+            .tabs {
+                gap: 5px;
+            }
+
+            .tab-btn {
+                padding: 10px 12px;
+                font-size: 12px;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🏥 Lab Exam Validator</h1>
+            <p class="header-subtitle">Sistema de validação de exames laboratoriais - Conferência de requisições vs resultados</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('new-exam')">+ Novo Exame</button>
+            <button class="tab-btn" onclick="switchTab('manage')">Gerenciar Exames</button>
+            <button class="tab-btn" onclick="switchTab('validation')">Validação</button>
+            <button class="tab-btn" onclick="switchTab('report')">Relatório</button>
+        </div>
+
+        <!-- TAB 1: NOVO EXAME -->
+        <div id="new-exam" class="tab-content active">
+            <div class="card">
+                <h2>📋 Criar Nova Requisição de Exame</h2>
+                <form id="newExamForm">
+                    <div class="grid">
+                        <div class="form-group">
+                            <label for="patientName">Nome do Paciente <span class="optional-badge">(opcional)</span></label>
+                            <input type="text" id="patientName" placeholder="Digite o nome completo">
+                        </div>
+                        <div class="form-group">
+                            <label for="patientCpf">CPF <span class="optional-badge">(opcional)</span></label>
+                            <input type="text" id="patientCpf" placeholder="000.000.000-00">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="examsRequested">Exames Solicitados *</label>
+                        <textarea id="examsRequested" placeholder="Listar os exames solicitados, um por linha&#10;Ex:&#10;Hemograma completo&#10;Glicose em jejum&#10;Triglicerídeos" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ou Upload de Arquivo com Exames Solicitados</label>
+                        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">Opcional - PDF ou Imagem com a lista de exames</p>
+                        <div class="file-upload" id="requestFileArea">
+                            <div class="upload-icon">📄</div>
+                            <div class="upload-text">Clique ou arraste o arquivo aqui</div>
+                            <div class="upload-hint">PDF, JPG, PNG (máx 5MB)</div>
+                            <input type="file" id="requestFile" accept=".pdf,.jpg,.png,.jpeg">
+                        </div>
+                        <div class="file-list" id="requestFileList"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="requestDate">Data da Requisição</label>
+                        <input type="text" id="requestDate" placeholder="DD/MM/YYYY">
+                    </div>
+
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-primary" onclick="saveNewExam()">Salvar Requisição</button>
+                        <button type="button" class="btn btn-secondary" onclick="clearForm('newExamForm')">Limpar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- TAB 2: GERENCIAR EXAMES -->
+        <div id="manage" class="tab-content">
+            <div class="card">
+                <h2>📊 Gerenciar Requisições e Resultados</h2>
+                <div id="examsList" style="margin-top: 20px;"></div>
+                <div id="noExams" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                    <p>Nenhum exame cadastrado ainda. Crie um novo exame na aba anterior.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: VALIDAÇÃO -->
+        <div id="validation" class="tab-content">
+            <div class="card">
+                <h2>✅ Validação & Conferência</h2>
+                <div class="alert alert-info">
+                    <strong>ℹ️ Como funciona:</strong> O sistema compara automaticamente os exames solicitados com os realizados. Verde = Completo, Amarelo = Incompleto, Vermelho = Discrepâncias.
+                </div>
+                <div id="validationResults" style="margin-top: 20px;"></div>
+                <div id="noValidation" style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                    <p>Nenhum resultado de validação disponível. Adicione resultados de exames.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: RELATÓRIO -->
+        <div id="report" class="tab-content">
+            <div class="card">
+                <h2>📈 Relatório Geral</h2>
+                <div id="reportSummary">
+                    <div class="summary-stats">
+                        <div class="stat-box">
+                            <div class="stat-number" id="totalExams">0</div>
+                            <div class="stat-label">Total de Exames</div>
+                        </div>
+                        <div class="stat-box success">
+                            <div class="stat-number" id="completeExams">0</div>
+                            <div class="stat-label">Completos ✓</div>
+                        </div>
+                        <div class="stat-box warning">
+                            <div class="stat-number" id="incompleteExams">0</div>
+                            <div class="stat-label">Incompletos</div>
+                        </div>
+                        <div class="stat-box error">
+                            <div class="stat-number" id="errorExams">0</div>
+                            <div class="stat-label">Discrepâncias</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3 style="margin-top: 30px; margin-bottom: 15px; color: var(--color-primary);">Detalhes dos Exames</h3>
+                <div id="reportDetails"></div>
+
+                <div class="btn-group" style="margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="exportMissingExamsCSV()">📥 Exames Faltantes (CSV)</button>
+                    <button class="btn btn-primary" onclick="exportMissingExamsTXT()">📥 Exames Faltantes (TXT)</button>
+                    <button class="btn btn-secondary" onclick="exportReport()">📥 Relatório Completo (CSV)</button>
+                    <button class="btn btn-secondary" onclick="printReport()">🖨️ Imprimir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let exams = JSON.parse(localStorage.getItem('exams')) || [];
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'manage') loadExamsList();
+            if (tabName === 'validation') loadValidationResults();
+            if (tabName === 'report') generateReport();
+        }
+
+        // Drag and drop
+        const fileAreas = document.querySelectorAll('.file-upload');
+        fileAreas.forEach(area => {
+            area.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                area.classList.add('drag-over');
+            });
+            area.addEventListener('dragleave', () => {
+                area.classList.remove('drag-over');
+            });
+            area.addEventListener('drop', (e) => {
+                e.preventDefault();
+                area.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) handleFileUpload({target: {files: [file]}}, area.id);
+            });
+            area.addEventListener('click', () => {
+                area.querySelector('input[type="file"]').click();
+            });
+        });
+
+        function handleFileUpload(event, areaId) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Arquivo muito grande! Máximo 5MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const listId = areaId === 'requestFileArea' ? 'requestFileList' : 'resultFileList';
+                const listElement = document.getElementById(listId);
+                
+                if (listElement) {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item success';
+                    fileItem.innerHTML = `
+                        <span>✓ ${file.name} (${(file.size / 1024).toFixed(2)} KB)</span>
+                        <button type="button" class="btn btn-small" onclick="this.parentElement.remove()">Remover</button>
+                    `;
+                    listElement.appendChild(fileItem);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function saveNewExam() {
+            const patientName = document.getElementById('patientName').value.trim() || 'Sem Nome';
+            const patientCpf = document.getElementById('patientCpf').value.trim() || 'Sem CPF';
+            const examsList = document.getElementById('examsRequested').value.split('\n').filter(e => e.trim());
+            const requestDate = document.getElementById('requestDate').value || new Date().toLocaleDateString('pt-BR');
+
+            if (examsList.length === 0) {
+                alert('Por favor, adicione pelo menos um exame solicitado');
+                return;
+            }
+
+            const newExam = {
+                id: Date.now(),
+                patientName,
+                patientCpf,
+                examsRequested: examsList,
+                requestDate,
+                examsDone: [],
+                status: 'pending',
+                createdAt: new Date().toLocaleDateString('pt-BR')
+            };
+
+            exams.push(newExam);
+            localStorage.setItem('exams', JSON.stringify(exams));
+            
+            alert('✓ Requisição salva com sucesso!');
+            clearForm('newExamForm');
+        }
+
+        function loadExamsList() {
+            const list = document.getElementById('examsList');
+            const noExams = document.getElementById('noExams');
+
+            if (exams.length === 0) {
+                list.innerHTML = '';
+                noExams.style.display = 'block';
+                return;
+            }
+
+            noExams.style.display = 'none';
+            list.innerHTML = exams.map(exam => `
+                <div class="exam-card ${exam.status === 'complete' ? 'complete' : exam.status === 'error' ? 'error' : 'incomplete'}">
+                    <div class="exam-header">
+                        <div>
+                            <div class="exam-title">${exam.patientName}</div>
+                            <div class="exam-details">CPF: ${exam.patientCpf} | Data: ${exam.requestDate}</div>
+                        </div>
+                        <span class="status-badge status-${exam.status}">${
+                            exam.status === 'complete' ? 'COMPLETO ✓' : 
+                            exam.status === 'error' ? 'DISCREPÂNCIAS ✗' : 
+                            'PENDENTE'
+                        }</span>
+                    </div>
+
+                    <div class="exam-details" style="margin: 15px 0;">
+                        <strong>Exames Solicitados (${exam.examsRequested.length}):</strong>
+                        <ul style="margin: 5px 0 0 20px;">
+                            ${exam.examsRequested.map(e => `<li>${e}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    ${exam.examsDone.length > 0 ? `
+                        <div class="exam-details">
+                            <strong>Exames Realizados (${exam.examsDone.length}):</strong>
+                            <ul style="margin: 5px 0 0 20px;">
+                                ${exam.examsDone.map(e => `<li>${e}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+
+                    <div class="btn-group">
+                        <button class="btn btn-primary btn-small" onclick="showUploadResult(${exam.id})">Anexar Resultado</button>
+                        <button class="btn btn-secondary btn-small" onclick="deleteExam(${exam.id})">Deletar</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showUploadResult(examId) {
+            const exam = exams.find(e => e.id === examId);
+            if (!exam) return;
+
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.innerHTML = `
+                <div class="modal-content">
+                    <h3 class="modal-header">Adicionar Resultado dos Exames</h3>
+                    
+                    <div class="form-group">
+                        <label>Resultado em Texto</label>
+                        <textarea id="modalExamsDone" placeholder="Digite os exames REALIZADOS, um por linha" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; min-height: 120px; font-family: inherit;"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ou Upload do Arquivo de Resultado</label>
+                        <div class="file-upload" id="resultFileAreaModal" style="margin-bottom: 10px;">
+                            <div class="upload-icon">📄</div>
+                            <div class="upload-text">Clique ou arraste o arquivo aqui</div>
+                            <div class="upload-hint">PDF, JPG, PNG (máx 5MB)</div>
+                            <input type="file" id="resultFileModal" accept=".pdf,.jpg,.jpeg,.png">
+                        </div>
+                        <div class="file-list" id="resultFileListModal"></div>
+                    </div>
+
+                    <div class="btn-group" style="justify-content: flex-end;">
+                        <button class="btn btn-secondary" onclick="this.closest('.modal').remove()">Cancelar</button>
+                        <button class="btn btn-primary" onclick="saveExamResult(${examId})">Salvar Resultado</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            const fileArea = modal.querySelector('#resultFileAreaModal');
+            fileArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileArea.classList.add('drag-over');
+            });
+            fileArea.addEventListener('dragleave', () => {
+                fileArea.classList.remove('drag-over');
+            });
+            fileArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileArea.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) handleFileUpload({target: {files: [file]}}, 'resultFileAreaModal');
+            });
+            fileArea.addEventListener('click', () => {
+                modal.querySelector('#resultFileModal').click();
+            });
+        }
+
+        function saveExamResult(examId) {
+            const exam = exams.find(e => e.id === examId);
+            if (!exam) return;
+
+            const examsDoneText = document.querySelector('#modalExamsDone').value.trim();
+
+            if (!examsDoneText) {
+                alert('Por favor, adicione os exames realizados em texto');
+                return;
+            }
+
+            exam.examsDone = examsDoneText.split('\n').filter(e => e.trim());
+
+            const allRequested = exam.examsRequested.map(e => e.toLowerCase().trim());
+            const allDone = exam.examsDone.map(e => e.toLowerCase().trim());
+            
+            const missing = allRequested.filter(e => !allDone.includes(e));
+            const extra = allDone.filter(e => !allRequested.includes(e));
+
+            if (missing.length === 0 && extra.length === 0) {
+                exam.status = 'complete';
+            } else if (missing.length > 0 || extra.length > 0) {
+                exam.status = 'error';
+            }
+
+            localStorage.setItem('exams', JSON.stringify(exams));
+            document.querySelector('.modal').remove();
+            loadExamsList();
+            alert('✓ Resultado registrado e validação concluída!');
+        }
+
+        function loadValidationResults() {
+            const results = document.getElementById('validationResults');
+            const noValidation = document.getElementById('noValidation');
+
+            const withResults = exams.filter(e => e.examsDone.length > 0);
+
+            if (withResults.length === 0) {
+                results.innerHTML = '';
+                noValidation.style.display = 'block';
+                return;
+            }
+
+            noValidation.style.display = 'none';
+            results.innerHTML = withResults.map(exam => {
+                const requested = exam.examsRequested.map(e => e.toLowerCase().trim());
+                const done = exam.examsDone.map(e => e.toLowerCase().trim());
+                
+                const missing = requested.filter(e => !done.includes(e));
+                const extra = done.filter(e => !requested.includes(e));
+                const matched = requested.filter(e => done.includes(e));
+
+                return `
+                    <div class="exam-card ${exam.status}">
+                        <div class="exam-title">${exam.patientName}</div>
+                        <div class="exam-details">CPF: ${exam.patientCpf} | Data: ${exam.requestDate}</div>
+                        
+                        <table class="comparison-table">
+                            <thead>
+                                <tr>
+                                    <th>Exame</th>
+                                    <th>Solicitado</th>
+                                    <th>Realizado</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${requested.map((req, i) => {
+                                    const isDone = done.includes(req);
+                                    return `
+                                        <tr>
+                                            <td>${exam.examsRequested[i]}</td>
+                                            <td>✓</td>
+                                            <td>${isDone ? '✓' : '-'}</td>
+                                            <td>
+                                                <span class="match-icon ${isDone ? 'match-yes' : 'match-no'}">
+                                                    ${isDone ? '✓' : '✗'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                                ${extra.length > 0 ? extra.map(ex => `
+                                    <tr>
+                                        <td>${ex}</td>
+                                        <td>-</td>
+                                        <td>✓</td>
+                                        <td><span class="match-icon match-no">⚠️</span></td>
+                                    </tr>
+                                `).join('') : ''}
+                            </tbody>
+                        </table>
+
+                        <div style="margin-top: 15px; font-size: 13px;">
+                            <strong>Resumo:</strong>
+                            ${matched.length > 0 ? `<p>✓ ${matched.length} exame(s) conferido(s)</p>` : ''}
+                            ${missing.length > 0 ? `<p style="color: var(--color-warning);">⚠️ ${missing.length} exame(s) faltando</p>` : ''}
+                            ${extra.length > 0 ? `<p style="color: var(--color-info);">ℹ️ ${extra.length} exame(s) extra</p>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function generateReport() {
+            const stats = {
+                total: exams.length,
+                complete: exams.filter(e => e.status === 'complete').length,
+                incomplete: exams.filter(e => e.status === 'pending').length,
+                error: exams.filter(e => e.status === 'error').length
+            };
+
+            document.getElementById('totalExams').textContent = stats.total;
+            document.getElementById('completeExams').textContent = stats.complete;
+            document.getElementById('incompleteExams').textContent = stats.incomplete;
+            document.getElementById('errorExams').textContent = stats.error;
+
+            const details = document.getElementById('reportDetails');
+            details.innerHTML = exams.map(exam => `
+                <div class="exam-card ${exam.status}">
+                    <div class="exam-title">${exam.patientName}</div>
+                    <div class="exam-details">
+                        <strong>CPF:</strong> ${exam.patientCpf}<br>
+                        <strong>Data:</strong> ${exam.requestDate}<br>
+                        <strong>Status:</strong> ${exam.status.toUpperCase()}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function exportMissingExamsCSV() {
+            const examsWithMissing = exams.map(exam => {
+                const requested = exam.examsRequested.map(e => e.toLowerCase().trim());
+                const done = exam.examsDone.map(e => e.toLowerCase().trim());
+                const missing = requested.filter(e => !done.includes(e));
+                
+                if (missing.length === 0) return null;
+                
+                return {
+                    paciente: exam.patientName,
+                    cpf: exam.patientCpf,
+                    data: exam.requestDate,
+                    faltando: exam.examsRequested.filter((e, i) => !done.includes(e.toLowerCase().trim())).join('; ')
+                };
+            }).filter(x => x);
+
+            if (examsWithMissing.length === 0) {
+                alert('Nenhum exame faltando para exportar!');
+                return;
+            }
+
+            let csv = 'RELATÓRIO DE EXAMES FALTANTES\n\n';
+            csv += 'Data de Exportação,' + new Date().toLocaleDateString('pt-BR') + '\n\n';
+            csv += 'Paciente,CPF,Data Requisição,Exames Faltando\n';
+            
+            examsWithMissing.forEach(item => {
+                csv += `"${item.paciente}","${item.cpf}","${item.data}","${item.faltando}"\n`;
+            });
+
+            const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `exames_faltantes_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+        }
+
+        function exportMissingExamsTXT() {
+            const examsWithMissing = exams.map(exam => {
+                const requested = exam.examsRequested.map(e => e.toLowerCase().trim());
+                const done = exam.examsDone.map(e => e.toLowerCase().trim());
+                const missing = requested.filter(e => !done.includes(e));
+                
+                if (missing.length === 0) return null;
+                
+                return {
+                    paciente: exam.patientName,
+                    cpf: exam.patientCpf,
+                    data: exam.requestDate,
+                    faltando: exam.examsRequested.filter((e, i) => !done.includes(e.toLowerCase().trim()))
+                };
+            }).filter(x => x);
+
+            if (examsWithMissing.length === 0) {
+                alert('Nenhum exame faltando para exportar!');
+                return;
+            }
+
+            let txt = '═══════════════════════════════════════════════════════════\n';
+            txt += '        RELATÓRIO DE EXAMES FALTANTES\n';
+            txt += '═══════════════════════════════════════════════════════════\n\n';
+            txt += `Data de Exportação: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}\n\n`;
+
+            examsWithMissing.forEach((item, index) => {
+                txt += `PACIENTE ${index + 1}\n`;
+                txt += '─────────────────────────────────────────────────────────\n';
+                txt += `Nome: ${item.paciente}\n`;
+                txt += `CPF:  ${item.cpf}\n`;
+                txt += `Data da Requisição: ${item.data}\n\n`;
+                txt += `Exames Faltantes (${item.faltando.length}):\n`;
+                item.faltando.forEach((exame, i) => {
+                    txt += `  ${i + 1}. ${exame}\n`;
+                });
+                txt += '\n';
+            });
+
+            txt += '═══════════════════════════════════════════════════════════\n';
+            txt += `Total de Pacientes com Exames Faltantes: ${examsWithMissing.length}\n`;
+            txt += '═══════════════════════════════════════════════════════════\n';
+
+            const blob = new Blob([txt], {type: 'text/plain;charset=utf-8'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `exames_faltantes_${new Date().toISOString().slice(0,10)}.txt`;
+            link.click();
+        }
+
+        function exportReport() {
+            let csv = 'RELATÓRIO DE EXAMES LABORATORIAIS\n\n';
+            csv += 'Data de Exportação,' + new Date().toLocaleDateString('pt-BR') + '\n\n';
+            csv += 'Nome do Paciente,CPF,Data Requisição,Exames Solicitados,Exames Realizados,Status\n';
+            
+            exams.forEach(exam => {
+                csv += `"${exam.patientName}","${exam.patientCpf}","${exam.requestDate}","${exam.examsRequested.join('; ')}","${exam.examsDone.join('; ')}","${exam.status}"\n`;
+            });
+
+            const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `relatorio_exames_${new Date().toISOString().slice(0,10)}.csv`;
+            link.click();
+        }
+
+        function printReport() {
+            window.print();
+        }
+
+        function deleteExam(examId) {
+            if (confirm('Tem certeza que deseja deletar este exame?')) {
+                exams = exams.filter(e => e.id !== examId);
+                localStorage.setItem('exams', JSON.stringify(exams));
+                loadExamsList();
+            }
+        }
+
+        function clearForm(formId) {
+            document.getElementById(formId).reset();
+            document.getElementById('requestFileList').innerHTML = '';
+        }
+    </script>
+</body>
+</html>

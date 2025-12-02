@@ -153,62 +153,6 @@
             min-height: 100px;
         }
 
-        .file-upload {
-            border: 2px dashed var(--border-color);
-            border-radius: 8px;
-            padding: 30px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            background-color: var(--bg-light);
-        }
-
-        .file-upload:hover,
-        .file-upload.drag-over {
-            border-color: var(--color-primary);
-            background-color: rgba(32, 128, 148, 0.05);
-        }
-
-        .file-upload input[type="file"] {
-            display: none;
-        }
-
-        .upload-icon {
-            font-size: 40px;
-            margin-bottom: 10px;
-        }
-
-        .upload-text {
-            color: var(--text-primary);
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .upload-hint {
-            color: var(--text-secondary);
-            font-size: 13px;
-        }
-
-        .file-list {
-            margin-top: 15px;
-        }
-
-        .file-item {
-            background: var(--bg-light);
-            padding: 10px 15px;
-            border-radius: 6px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            font-size: 13px;
-        }
-
-        .file-item.success {
-            background-color: rgba(47, 179, 133, 0.1);
-            border-left: 3px solid var(--color-success);
-        }
-
         .btn {
             padding: 10px 20px;
             border: none;
@@ -421,6 +365,12 @@
             color: var(--color-info);
         }
 
+        .alert-warning {
+            background-color: rgba(243, 156, 18, 0.1);
+            border-color: var(--color-warning);
+            color: var(--color-warning);
+        }
+
         .modal {
             position: fixed;
             top: 0;
@@ -511,18 +461,6 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Ou Upload de Arquivo com Exames Solicitados</label>
-                        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;">Opcional - PDF ou Imagem com a lista de exames</p>
-                        <div class="file-upload" id="requestFileArea">
-                            <div class="upload-icon">📄</div>
-                            <div class="upload-text">Clique ou arraste o arquivo aqui</div>
-                            <div class="upload-hint">PDF, JPG, PNG (máx 5MB)</div>
-                            <input type="file" id="requestFile" accept=".pdf,.jpg,.png,.jpeg">
-                        </div>
-                        <div class="file-list" id="requestFileList"></div>
-                    </div>
-
-                    <div class="form-group">
                         <label for="requestDate">Data da Requisição</label>
                         <input type="text" id="requestDate" placeholder="DD/MM/YYYY">
                     </div>
@@ -589,17 +527,43 @@
                 <div id="reportDetails"></div>
 
                 <div class="btn-group" style="margin-top: 20px;">
-                    <button class="btn btn-primary" onclick="exportMissingExamsCSV()">📥 Exames Faltantes (CSV)</button>
-                    <button class="btn btn-primary" onclick="exportMissingExamsTXT()">📥 Exames Faltantes (TXT)</button>
-                    <button class="btn btn-secondary" onclick="exportReport()">📥 Relatório Completo (CSV)</button>
+                    <button class="btn btn-primary" onclick="copyToClipboard('examesCSV')">📋 Exames Faltantes (Copiar CSV)</button>
+                    <button class="btn btn-primary" onclick="copyToClipboard('examesTXT')">📋 Exames Faltantes (Copiar TXT)</button>
+                    <button class="btn btn-secondary" onclick="copyToClipboard('relatorioCSV')">📋 Relatório Completo (Copiar CSV)</button>
                     <button class="btn btn-secondary" onclick="printReport()">🖨️ Imprimir</button>
                 </div>
+
+                <!-- Áreas ocultas para copiar -->
+                <textarea id="examesCSV" style="display:none;"></textarea>
+                <textarea id="examesTXT" style="display:none;"></textarea>
+                <textarea id="relatorioCSV" style="display:none;"></textarea>
             </div>
         </div>
     </div>
 
     <script>
-        let exams = JSON.parse(localStorage.getItem('exams')) || [];
+        // Usar sessionStorage em vez de localStorage para melhor compatibilidade com iframes
+        function getData() {
+            try {
+                return JSON.parse(sessionStorage.getItem('exams')) || JSON.parse(localStorage.getItem('exams')) || [];
+            } catch {
+                return [];
+            }
+        }
+
+        function saveData(exams) {
+            try {
+                sessionStorage.setItem('exams', JSON.stringify(exams));
+            } catch {
+                try {
+                    localStorage.setItem('exams', JSON.stringify(exams));
+                } catch {
+                    console.warn('Armazenamento indisponível. Dados serão perdidos ao atualizar a página.');
+                }
+            }
+        }
+
+        let exams = getData();
 
         function switchTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -611,54 +575,6 @@
             if (tabName === 'manage') loadExamsList();
             if (tabName === 'validation') loadValidationResults();
             if (tabName === 'report') generateReport();
-        }
-
-        // Drag and drop
-        const fileAreas = document.querySelectorAll('.file-upload');
-        fileAreas.forEach(area => {
-            area.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                area.classList.add('drag-over');
-            });
-            area.addEventListener('dragleave', () => {
-                area.classList.remove('drag-over');
-            });
-            area.addEventListener('drop', (e) => {
-                e.preventDefault();
-                area.classList.remove('drag-over');
-                const file = e.dataTransfer.files[0];
-                if (file) handleFileUpload({target: {files: [file]}}, area.id);
-            });
-            area.addEventListener('click', () => {
-                area.querySelector('input[type="file"]').click();
-            });
-        });
-
-        function handleFileUpload(event, areaId) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (file.size > 5 * 1024 * 1024) {
-                alert('Arquivo muito grande! Máximo 5MB');
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = (e) => {
-                const listId = areaId === 'requestFileArea' ? 'requestFileList' : 'resultFileList';
-                const listElement = document.getElementById(listId);
-                
-                if (listElement) {
-                    const fileItem = document.createElement('div');
-                    fileItem.className = 'file-item success';
-                    fileItem.innerHTML = `
-                        <span>✓ ${file.name} (${(file.size / 1024).toFixed(2)} KB)</span>
-                        <button type="button" class="btn btn-small" onclick="this.parentElement.remove()">Remover</button>
-                    `;
-                    listElement.appendChild(fileItem);
-                }
-            };
-            reader.readAsArrayBuffer(file);
         }
 
         function saveNewExam() {
@@ -684,7 +600,7 @@
             };
 
             exams.push(newExam);
-            localStorage.setItem('exams', JSON.stringify(exams));
+            saveData(exams);
             
             alert('✓ Requisição salva com sucesso!');
             clearForm('newExamForm');
@@ -732,7 +648,7 @@
                     ` : ''}
 
                     <div class="btn-group">
-                        <button class="btn btn-primary btn-small" onclick="showUploadResult(${exam.id})">Anexar Resultado</button>
+                        <button class="btn btn-primary btn-small" onclick="showUploadResult(${exam.id})">Adicionar Resultado</button>
                         <button class="btn btn-secondary btn-small" onclick="deleteExam(${exam.id})">Deletar</button>
                     </div>
                 </div>
@@ -750,19 +666,8 @@
                     <h3 class="modal-header">Adicionar Resultado dos Exames</h3>
                     
                     <div class="form-group">
-                        <label>Resultado em Texto</label>
-                        <textarea id="modalExamsDone" placeholder="Digite os exames REALIZADOS, um por linha" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; min-height: 120px; font-family: inherit;"></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Ou Upload do Arquivo de Resultado</label>
-                        <div class="file-upload" id="resultFileAreaModal" style="margin-bottom: 10px;">
-                            <div class="upload-icon">📄</div>
-                            <div class="upload-text">Clique ou arraste o arquivo aqui</div>
-                            <div class="upload-hint">PDF, JPG, PNG (máx 5MB)</div>
-                            <input type="file" id="resultFileModal" accept=".pdf,.jpg,.jpeg,.png">
-                        </div>
-                        <div class="file-list" id="resultFileListModal"></div>
+                        <label>Digite os Exames Realizados</label>
+                        <textarea id="modalExamsDone" placeholder="Digite os exames REALIZADOS, um por linha&#10;&#10;Ex:&#10;Hemograma completo&#10;Glicose em jejum&#10;Triglicerídeos" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 6px; min-height: 120px; font-family: inherit;"></textarea>
                     </div>
 
                     <div class="btn-group" style="justify-content: flex-end;">
@@ -773,24 +678,6 @@
             `;
 
             document.body.appendChild(modal);
-
-            const fileArea = modal.querySelector('#resultFileAreaModal');
-            fileArea.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                fileArea.classList.add('drag-over');
-            });
-            fileArea.addEventListener('dragleave', () => {
-                fileArea.classList.remove('drag-over');
-            });
-            fileArea.addEventListener('drop', (e) => {
-                e.preventDefault();
-                fileArea.classList.remove('drag-over');
-                const file = e.dataTransfer.files[0];
-                if (file) handleFileUpload({target: {files: [file]}}, 'resultFileAreaModal');
-            });
-            fileArea.addEventListener('click', () => {
-                modal.querySelector('#resultFileModal').click();
-            });
         }
 
         function saveExamResult(examId) {
@@ -800,7 +687,7 @@
             const examsDoneText = document.querySelector('#modalExamsDone').value.trim();
 
             if (!examsDoneText) {
-                alert('Por favor, adicione os exames realizados em texto');
+                alert('Por favor, adicione os exames realizados');
                 return;
             }
 
@@ -818,7 +705,7 @@
                 exam.status = 'error';
             }
 
-            localStorage.setItem('exams', JSON.stringify(exams));
+            saveData(exams);
             document.querySelector('.modal').remove();
             loadExamsList();
             alert('✓ Resultado registrado e validação concluída!');
@@ -864,7 +751,7 @@
                                     const isDone = done.includes(req);
                                     return `
                                         <tr>
-                                            <td>${exam.examsRequested[i]}</td>
+                                            <td>${exam.examesRequested[i]}</td>
                                             <td>✓</td>
                                             <td>${isDone ? '✓' : '-'}</td>
                                             <td>
@@ -921,9 +808,13 @@
                     </div>
                 </div>
             `).join('');
+
+            // Gerar dados para exportação
+            generateExportData();
         }
 
-        function exportMissingExamsCSV() {
+        function generateExportData() {
+            // Exames Faltantes CSV
             const examsWithMissing = exams.map(exam => {
                 const requested = exam.examsRequested.map(e => e.toLowerCase().trim());
                 const done = exam.examsDone.map(e => e.toLowerCase().trim());
@@ -939,90 +830,49 @@
                 };
             }).filter(x => x);
 
-            if (examsWithMissing.length === 0) {
-                alert('Nenhum exame faltando para exportar!');
-                return;
-            }
-
-            let csv = 'RELATÓRIO DE EXAMES FALTANTES\n\n';
-            csv += 'Data de Exportação,' + new Date().toLocaleDateString('pt-BR') + '\n\n';
-            csv += 'Paciente,CPF,Data Requisição,Exames Faltando\n';
-            
+            let csvMissing = 'Paciente,CPF,Data Requisição,Exames Faltando\n';
             examsWithMissing.forEach(item => {
-                csv += `"${item.paciente}","${item.cpf}","${item.data}","${item.faltando}"\n`;
+                csvMissing += `"${item.paciente}","${item.cpf}","${item.data}","${item.faltando}"\n`;
             });
+            document.getElementById('examesCSV').value = csvMissing;
 
-            const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `exames_faltantes_${new Date().toISOString().slice(0,10)}.csv`;
-            link.click();
-        }
-
-        function exportMissingExamsTXT() {
-            const examsWithMissing = exams.map(exam => {
-                const requested = exam.examsRequested.map(e => e.toLowerCase().trim());
-                const done = exam.examsDone.map(e => e.toLowerCase().trim());
-                const missing = requested.filter(e => !done.includes(e));
-                
-                if (missing.length === 0) return null;
-                
-                return {
-                    paciente: exam.patientName,
-                    cpf: exam.patientCpf,
-                    data: exam.requestDate,
-                    faltando: exam.examsRequested.filter((e, i) => !done.includes(e.toLowerCase().trim()))
-                };
-            }).filter(x => x);
-
-            if (examsWithMissing.length === 0) {
-                alert('Nenhum exame faltando para exportar!');
-                return;
-            }
-
-            let txt = '═══════════════════════════════════════════════════════════\n';
-            txt += '        RELATÓRIO DE EXAMES FALTANTES\n';
-            txt += '═══════════════════════════════════════════════════════════\n\n';
-            txt += `Data de Exportação: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}\n\n`;
+            // Exames Faltantes TXT
+            let txtMissing = '═══════════════════════════════════════════════════════════\n';
+            txtMissing += '        RELATÓRIO DE EXAMES FALTANTES\n';
+            txtMissing += '═══════════════════════════════════════════════════════════\n\n';
+            txtMissing += `Data: ${new Date().toLocaleDateString('pt-BR')} ${new Date().toLocaleTimeString('pt-BR')}\n\n`;
 
             examsWithMissing.forEach((item, index) => {
-                txt += `PACIENTE ${index + 1}\n`;
-                txt += '─────────────────────────────────────────────────────────\n';
-                txt += `Nome: ${item.paciente}\n`;
-                txt += `CPF:  ${item.cpf}\n`;
-                txt += `Data da Requisição: ${item.data}\n\n`;
-                txt += `Exames Faltantes (${item.faltando.length}):\n`;
-                item.faltando.forEach((exame, i) => {
-                    txt += `  ${i + 1}. ${exame}\n`;
+                const missing = item.faltando.split('; ');
+                txtMissing += `PACIENTE ${index + 1}\n`;
+                txtMissing += '─────────────────────────────────────────────────────────\n';
+                txtMissing += `Nome: ${item.paciente}\nCPF: ${item.cpf}\nData: ${item.data}\n\n`;
+                txtMissing += `Exames Faltantes (${missing.length}):\n`;
+                missing.forEach((e, i) => {
+                    txtMissing += `  ${i + 1}. ${e}\n`;
                 });
-                txt += '\n';
+                txtMissing += '\n';
             });
+            document.getElementById('examesTXT').value = txtMissing;
 
-            txt += '═══════════════════════════════════════════════════════════\n';
-            txt += `Total de Pacientes com Exames Faltantes: ${examsWithMissing.length}\n`;
-            txt += '═══════════════════════════════════════════════════════════\n';
-
-            const blob = new Blob([txt], {type: 'text/plain;charset=utf-8'});
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `exames_faltantes_${new Date().toISOString().slice(0,10)}.txt`;
-            link.click();
+            // Relatório Completo CSV
+            let csvCompleto = 'Nome do Paciente,CPF,Data Requisição,Exames Solicitados,Exames Realizados,Status\n';
+            exams.forEach(exam => {
+                csvCompleto += `"${exam.patientName}","${exam.patientCpf}","${exam.requestDate}","${exam.examesRequested.join('; ')}","${exam.examsDone.join('; ')}","${exam.status}"\n`;
+            });
+            document.getElementById('relatorioCSV').value = csvCompleto;
         }
 
-        function exportReport() {
-            let csv = 'RELATÓRIO DE EXAMES LABORATORIAIS\n\n';
-            csv += 'Data de Exportação,' + new Date().toLocaleDateString('pt-BR') + '\n\n';
-            csv += 'Nome do Paciente,CPF,Data Requisição,Exames Solicitados,Exames Realizados,Status\n';
-            
-            exams.forEach(exam => {
-                csv += `"${exam.patientName}","${exam.patientCpf}","${exam.requestDate}","${exam.examsRequested.join('; ')}","${exam.examsDone.join('; ')}","${exam.status}"\n`;
-            });
+        function copyToClipboard(elementId) {
+            const textarea = document.getElementById(elementId);
+            if (!textarea.value) {
+                alert('Nenhum dado para copiar!');
+                return;
+            }
 
-            const blob = new Blob([csv], {type: 'text/csv;charset=utf-8'});
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = `relatorio_exames_${new Date().toISOString().slice(0,10)}.csv`;
-            link.click();
+            textarea.select();
+            document.execCommand('copy');
+            alert('✓ Copiado para área de transferência!\n\nVocê pode colar no Excel, Google Sheets ou qualquer editor de texto.');
         }
 
         function printReport() {
@@ -1032,14 +882,13 @@
         function deleteExam(examId) {
             if (confirm('Tem certeza que deseja deletar este exame?')) {
                 exams = exams.filter(e => e.id !== examId);
-                localStorage.setItem('exams', JSON.stringify(exams));
+                saveData(exams);
                 loadExamsList();
             }
         }
 
         function clearForm(formId) {
             document.getElementById(formId).reset();
-            document.getElementById('requestFileList').innerHTML = '';
         }
     </script>
 </body>
